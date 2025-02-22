@@ -1,7 +1,7 @@
-    // app/api/places/route.ts
-    import { NextResponse } from "next/server";
+// app/api/places/route.ts
+import { NextResponse } from "next/server";
 
-    export async function GET(request: Request) {
+export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const location = searchParams.get("location"); // e.g., "latitude,longitude"
     const radius = searchParams.get("radius") || "1000"; // default radius in meters
@@ -9,8 +9,8 @@
 
     if (!location) {
         return NextResponse.json(
-        { error: "Location is required" },
-        { status: 400 }
+            { error: "Location is required" },
+            { status: 400 }
         );
     }
 
@@ -22,7 +22,7 @@
         const data = await response.json();
 
         if (data.error_message) {
-        return NextResponse.json({ error: data.error_message }, { status: 400 });
+            return NextResponse.json({ error: data.error_message }, { status: 400 });
         }
 
         console.log(NextResponse.json(data));
@@ -31,8 +31,8 @@
         console.log(error);
 
         return NextResponse.json(
-        { error: "Failed to fetch places" },
-        { status: 500 }
+            { error: "Failed to fetch places" },
+            { status: 500 }
         );
     }
-    }
+}
