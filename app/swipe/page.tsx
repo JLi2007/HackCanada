@@ -60,7 +60,7 @@ export default function Swipe() {
   console.log(userLocation);
 
   const loadMorePlaces = () => {
-    setDisplayCount(displayCount + 3); // Increment by 1 or change to another value for more places
+    setDisplayCount(displayCount + 3); 
   };
 
   return (
