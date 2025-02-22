@@ -1,20 +1,29 @@
 import React from "react";
 
 interface PlaceItemProps {
-  place: any;
+  place: {
+    id: string;
+    name: string;
+    // Add other properties relevant to your place data
+  };
+  onLike: () => void;
+  onDislike: () => void;
 }
 
-const PlaceItem: React.FC<PlaceItemProps> = React.memo(({ place }) => {
+const PlaceItem: React.FC<PlaceItemProps> = ({ place, onLike, onDislike }) => {
   return (
-    <li className="p-3 mb-3 bg-white shadow-lg rounded-lg">
-      <h4 className="text-lg font-bold">{place.name}</h4>
-      <p>{place.address || "Address not available"}</p>
-      <p>{place.description || "No description available"}</p>
-    </li>
+    <div className="flex justify-between items-center">
+      <span>{place.name}</span>
+      <div className="flex space-x-2">
+        <button onClick={onLike} className="text-red-500">
+          ❤️
+        </button>
+        <button onClick={onDislike} className="text-gray-500">
+          ❌
+        </button>
+      </div>
+    </div>
   );
-});
-
-// Set a display name for the memoized component
-PlaceItem.displayName = "PlaceItem";
+};
 
 export default PlaceItem;

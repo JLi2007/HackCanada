@@ -7,14 +7,24 @@ interface Location {
   longitude: number;
 }
 
+interface Place {
+  id: string; // Ensure this is a unique identifier
+  name: string;
+  // Add other properties relevant to your place data
+}
+
 export default function Swipe() {
   const [userLocation, setUserLocation] = useState<Location | null>(null);
-  const [places, setPlaces] = useState<any>(null);
+  const [places, setPlaces] = useState<Place[]>([]);
   const [loading, setLoading] = useState(false);
-  const [displayCount, setDisplayCount] = useState(1); 
+  const [likedPlaces, setLikedPlaces] = useState<Place[]>([]);
+  const [dislikedPlaces, setDislikedPlaces] = useState<Place[]>([]);
   const [locationRequested, setLocationRequested] = useState(false);
 
-  const getLocationData = () => {   
+  
+
+
+  const getLocationData = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         async (position) => {
@@ -23,47 +33,65 @@ export default function Swipe() {
             latitude: position.coords.latitude,
             longitude: position.coords.longitude,
           });
-          console.log('loading');
           setLoading(true);
 
           try {
-            const response = await fetch(
-              `api/places?location=${locationString}`, {
-                method: "GET",
-                headers: {
-                  Connection: "keep-alive",
-                },
-              }
-            );
-
-            console.log("done fetching places")
-
+            const response = await fetch(`api/places?location=${locationString}`);
             const data = await response.json();
-            console.log(data);
-
             if (response.ok) {
               setPlaces(data.results);
             } else {
-              console.log("error in fetching response");
+              console.error("Error fetching places");
             }
           } catch (error) {
-            console.log("Failed to fetch", error);
+            console.error("Failed to fetch", error);
           } finally {
             setLoading(false);
           }
         },
         (error) => {
-          console.log("Error getting location", error);
-        }
+          console.error("Error getting location", error);
+        },
+        { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
       );
     } else {
-      console.log("Geolocation is not supported by this browser.");
+      console.error("Geolocation is not supported by this browser.");
     }
     setLocationRequested(true);
   };
 
-  const loadMorePlaces = () => {
-    setDisplayCount(displayCount + 1); // Increment by 1 or change to another value for more places
+  const handleLike = (place: Place) => {
+    setLikedPlaces((prev) => [...prev, place]);
+    sendRecommendationData(place.id, true);
+  };
+
+  const handleDislike = (place: Place) => {
+    setDislikedPlaces((prev) => [...prev, place]);
+    sendRecommendationData(place.id, false);
+  };
+
+  const sendRecommendationData = async (placeId: string, liked: boolean) => {
+    try {
+      const response = await fetch('/api/recommendations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          likedPlaces,
+          dislikedPlaces,
+          location: userLocation,
+        }),
+      });
+
+      
+    if (!response.ok) {
+      const errorText = await response.text(); // Get error message from response
+      throw new Error(`Failed to send recommendation data: ${errorText}`);
+    }
+
+      console.log('Recommendation data sent successfully');
+    } catch (error) {
+      console.error('Error sending recommendation data:', error);
+    }
   };
 
   return (
@@ -74,35 +102,34 @@ export default function Swipe() {
         </h1>
 
         <div className="p-5">
-            {!locationRequested && !loading && (
-            <button
-              onClick={getLocationData}
-              className="btn"
-            >
+          {!locationRequested && !loading && (
+            <button onClick={getLocationData} className="btn">
               Get My Location
             </button>
           )}
 
           {userLocation && !loading ? (
             <p>
-              Latitude: {userLocation?.latitude}, Longitude:{" "}
-              {userLocation?.longitude}
+              Latitude: {userLocation.latitude}, Longitude: {userLocation.longitude}
             </p>
           ) : (
             <p>Loading location...</p>
           )}
 
-          {places && (
+          {places.length > 0 && (
             <div>
               <h3>Nearby Places:</h3>
               <ul>
-                {places.slice(0, displayCount).map((place: any, index: number) => (
-                  <PlaceItem key={index} place={place} />
+                {places.map((place, index) => (
+                  <li key={place.id || `place-${index}`} className="flex justify-between items-center">
+                    <PlaceItem 
+                      place={place} 
+                      onLike={() => handleLike(place)} 
+                      onDislike={() => handleDislike(place)} 
+                    />
+                  </li>
                 ))}
               </ul>
-              <button onClick={loadMorePlaces} className="btn">
-                Load More
-              </button>
             </div>
           )}
         </div>
