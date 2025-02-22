@@ -1,6 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 
 "use client";
+import React from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -10,32 +11,28 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Lens } from "./magicui/lens";
 
-export default function SwipeCard() {
+interface PlaceItemProps {
+  place: any;
+  address?: string;
+  description?: string;
+  photo?: string;
+}
+
+const SwipeCard: React.FC<PlaceItemProps> = React.memo(({ place }) => {
   return (
-    <Card className="relative max-w-md shadow-none">
+    <Card className="relative max-w-lg shadow-none m-5 max-h-screen">
       <CardHeader>
-        <Lens
-          zoomFactor={2}
-          lensSize={150}
-          isStatic={false}
-          ariaLabel="Zoom Area"
-        >
-          <img
-            src="https://images.unsplash.com/photo-1736606355698-5efdb410fe93?q=80&w=2071&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-            alt="image placeholder"
-            width={500}
-            height={500}
-          />
-        </Lens>
+        <img
+          src={place.photo}
+          alt={place.name || "Image of Location"}
+          className=" w-[90vw] h-[55vh]"
+        />
       </CardHeader>
       <CardContent>
-        <CardTitle className="text-2xl">Your next camp</CardTitle>
-        <CardDescription>
-          See our latest and best camp destinations all across the five
-          continents of the globe.
-        </CardDescription>
+        <CardTitle className="text-2xl">{place.name}</CardTitle>
+        <CardDescription>{place.address}</CardDescription>
+        <CardDescription>{place.description}</CardDescription>
       </CardContent>
       <CardFooter className="space-x-4">
         <Button>Let&apos;s go</Button>
@@ -43,4 +40,8 @@ export default function SwipeCard() {
       </CardFooter>
     </Card>
   );
-}
+});
+
+SwipeCard.displayName = "SwipeCard";
+
+export default SwipeCard;
