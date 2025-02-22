@@ -2,12 +2,12 @@
 
 "use client";
 import React from "react";
-import { Button } from "@/components/ui/button";
+// import { Button } from "@/components/ui/button";
 import {
   Card,
-  CardContent,
+  // CardContent,
   CardDescription,
-  CardFooter,
+  // CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -21,23 +21,19 @@ interface PlaceItemProps {
 
 const SwipeCard: React.FC<PlaceItemProps> = React.memo(({ place }) => {
   return (
-    <Card className="relative max-w-lg shadow-none m-5 max-h-screen">
-      <CardHeader>
+    <Card className="relative w-full max-h-screen shadow-none m-1">
+      <CardHeader className="w-full h-[85vh] overflow-hidden">
         <img
           src={place.photo}
           alt={place.name || "Image of Location"}
-          className=" w-[90vw] h-[55vh]"
+          className="w-auto h-full object-cover rounded-lg"
         />
+        <div className="absolute inset-0 flex flex-col justify-center items-center text-white p-4 justify-end">
+          <CardTitle className="text-3xl font-bold bg-stone-400/50 w-full p-1">{place.name}</CardTitle>
+          <CardDescription className="text-white text-lg bg-stone-400/50 w-full p-1">{place.address}</CardDescription>
+          <CardDescription className="text-white bg-stone-400/50 w-full p-1">{place.description}</CardDescription>
+        </div>
       </CardHeader>
-      <CardContent>
-        <CardTitle className="text-2xl">{place.name}</CardTitle>
-        <CardDescription>{place.address}</CardDescription>
-        <CardDescription>{place.description}</CardDescription>
-      </CardContent>
-      <CardFooter className="space-x-4">
-        <Button>Let&apos;s go</Button>
-        <Button variant="secondary">Another time</Button>
-      </CardFooter>
     </Card>
   );
 });

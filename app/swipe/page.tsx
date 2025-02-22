@@ -10,7 +10,6 @@ interface Location {
 export default function Swipe() {
   const [userLocation, setUserLocation] = useState<Location | null>(null);
   const [places, setPlaces] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
   const [displayCount, setDisplayCount] = useState(3);
 
   useEffect(() => {
@@ -23,7 +22,6 @@ export default function Swipe() {
             longitude: position.coords.longitude,
           });
           console.log("loading");
-          setLoading(true);
 
           try {
             const response = await fetch(
@@ -48,8 +46,6 @@ export default function Swipe() {
             }
           } catch (error) {
             console.log("Failed to fetch", error);
-          } finally {
-            setLoading(false);
           }
         },
         (error) => {
@@ -61,6 +57,7 @@ export default function Swipe() {
       console.log("Geolocation is not supported by this browser.");
     }
   }, []);
+  console.log(userLocation);
 
   const loadMorePlaces = () => {
     setDisplayCount(displayCount + 3); // Increment by 1 or change to another value for more places
@@ -68,31 +65,21 @@ export default function Swipe() {
 
   return (
     <div className="relative overflow-hidden">
-      <div className="h-screen w-screen bg-linear-to-b from-stone-400 via-stone-200 to-white font-manrope overflow-x-hidden">
-        <div className="flex flex-row items-end">
+      <div className="h-screen w-screen bg-linear-to-b from-white via-stone-200 to-stone-400 font-manrope overflow-x-hidden">
           <h1 className="flex items-center p-5 text-5xl h-[10%] text-black font-extrabold text-center animate-gradient-x">
             Swipe
           </h1>
-          {userLocation && !loading ? (
-            <p className="w-full flex justify-end mx-10">
-              Latitude: {userLocation?.latitude}, Longitude:{" "}
-              {userLocation?.longitude}
-            </p>
-          ) : (
-            <p>Loading location...</p>
-          )}
-        </div>
 
         <div>
           {places && (
             <div >
               <button
                 onClick={loadMorePlaces}
-                className="btn underline text-bold"
+                className="btn underline text-bold w-full"
               >
                 Load More
               </button>
-              <ul className="flex justify-between w-full border-r">
+              <ul className="flex justify-between w-full">
                 {places
                   .slice(displayCount - 3, displayCount)
                   .map((place: any, index: number) => (
