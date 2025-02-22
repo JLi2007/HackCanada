@@ -1,5 +1,3 @@
-/* eslint-disable @next/next/no-img-element */
-
 "use client";
 import React from "react";
 import {
@@ -22,14 +20,16 @@ interface Place {
 
 interface PlaceItemProps {
   place: Place;
+  likedPlaces: Record<string | number, boolean>;
+  setLikedPlaces: React.Dispatch<React.SetStateAction<Record<string | number, boolean>>>;
 }
 
-const SwipeCard: React.FC<PlaceItemProps> = React.memo(({ place }) => {
+const SwipeCard: React.FC<PlaceItemProps> = React.memo(({ place, likedPlaces, setLikedPlaces }) => {
   return (
     <Card className="relative w-full max-h-screen shadow-none m-1 hover:w-[175%] transition-all duration-500 ease-in-out">
       <CardHeader className="w-full h-[85vh] overflow-hidden">
         <img
-          src={place.photo || "/placeholder.jpg"} // Fallback image
+          src={place.photo || "/placeholder.jpg"} 
           alt={place.name || "Image of Location"}
           className="w-auto h-full object-cover rounded-lg"
         />
@@ -37,7 +37,11 @@ const SwipeCard: React.FC<PlaceItemProps> = React.memo(({ place }) => {
           <CardTitle className="text-3xl font-bold bg-stone-400/50 w-full p-1 flex items-center rounded-t-lg">
             {place.name || "Unknown Place"}
             <div className="flex ml-auto justify-end">
-              <ThumbsUpButton placeId={place.id} /> {/* Pass placeId */}
+              <ThumbsUpButton
+                placeId={place.id}
+                likedPlaces={likedPlaces}
+                setLikedPlaces={setLikedPlaces}
+              /> 
             </div>
           </CardTitle>
           {place.address && (
