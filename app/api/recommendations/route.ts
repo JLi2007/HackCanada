@@ -1,48 +1,42 @@
 import { NextRequest, NextResponse } from "next/server";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export async function POST(req: NextRequest) {
   try {
     // Parse the incoming request body
     const { likedPlaces, dislikedPlaces, location } = await req.json();
 
-  
     // Generate the prompt based on user preferences
     const prompt = `User has liked these places: ${JSON.stringify(
       likedPlaces.map((p: any) => p.name)
-    )}. 
+    )}.
     User has disliked these places: ${JSON.stringify(
       dislikedPlaces.map((p: any) => p.name)
     )}.
     Based on these preferences, suggest 5 new places near (${location.latitude}, ${location.longitude}).`;
 
-    // Make the API request to get recommendations
-    const res = await fetch(
-      "https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateText",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          prompt,
-          key: process.env.GEMINI_API_KEY,
-        }),
-      }
-    );
-
-    // Check if the response is successful
-    if (!res.ok) {
-      const errorData = await res.json();
-      console.error("API Error:", errorData);
-      return NextResponse.json({ error: "Failed to get recommendations" }, { status: 500 });
+    // Ensure the GEMINI_API_KEY is defined
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      throw new Error("GEMINI_API_KEY environment variable is not set");
     }
 
-    // Parse the API response
-    const result = await res.json();
-    console.log("API Response:", result);
+    // Create a Gemini client instance with your API key
+    const genAI = new GoogleGenerativeAI(apiKey);
 
-    // Return the recommendations
-    return NextResponse.json({ recommendations: result.candidates[0].output });
+    // Get the generative model instance; here we're using "gemini-1.5-flash"
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+    // Generate content using the prompt
+    const result = await model.generateContent(prompt);
+    console.log("Result: ", result.response.text());
+    // Return the recommendations (assuming the result contains the generated text in response.text())
+    return NextResponse.json({ recommendations: result.response.text() });
   } catch (error) {
     console.error("Error in POST handler:", error);
-    return NextResponse.json({ error: "Failed to get recommendations" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to get recommendations" },
+      { status: 500 }
+    );
   }
 }
