@@ -49,6 +49,7 @@ export async function GET(request: Request) {
             : null,
           id: place.place_id,
           description: await getPlaceDetails(place.place_id, apiKey!), // Ensure description is included
+          type: type,
         };
       })
     );

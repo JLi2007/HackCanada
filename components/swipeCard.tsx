@@ -2,15 +2,14 @@
 
 "use client";
 import React from "react";
-// import { Button } from "@/components/ui/button";
 import {
   Card,
-  // CardContent,
   CardDescription,
-  // CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import ThumbsUpButton from "./thumbs";
+import Badge from "./badge";
 
 interface PlaceItemProps {
   place: any;
@@ -29,9 +28,21 @@ const SwipeCard: React.FC<PlaceItemProps> = React.memo(({ place }) => {
           className="w-auto h-full object-cover rounded-lg"
         />
         <div className="absolute inset-0 flex flex-col justify-center items-center text-white p-4 justify-end">
-          <CardTitle className="text-3xl font-bold bg-stone-400/50 w-full p-1">{place.name}</CardTitle>
-          <CardDescription className="text-white text-lg bg-stone-400/50 w-full p-1">{place.address}</CardDescription>
-          <CardDescription className="text-white bg-stone-400/50 w-full p-1">{place.description}</CardDescription>
+          <CardTitle className="text-3xl font-bold bg-stone-400/50 w-full p-1 flex items-center">
+            {place.name}
+            <div className="flex ml-auto justify-end">
+          <ThumbsUpButton />
+        </div>
+          </CardTitle>
+          <CardDescription className="text-white text-lg bg-stone-400/50 w-full p-1">
+            {place.address}
+          </CardDescription>
+          <CardDescription className="text-white bg-stone-400/50 w-full p-1">
+            {place.description}
+          </CardDescription>
+          <CardDescription className="text-white bg-stone-400/50 w-full p-1">
+            <Badge text={place.type} color={place.type=="restaurant" ? "#0d31e0" : place.type=="cafe" ? "#e01507" : "#f0da13"}></Badge>
+          </CardDescription>
         </div>
       </CardHeader>
     </Card>
