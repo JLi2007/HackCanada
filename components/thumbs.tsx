@@ -1,23 +1,16 @@
 "use client";
-import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { ThumbsUp } from "lucide-react";
 import confetti from "canvas-confetti";
 
 interface ThumbsUpButtonProps {
-  placeId: string | number; 
+  placeId: string | number;
+  likedPlaces: Record<string | number, boolean>;
+  setLikedPlaces: React.Dispatch<React.SetStateAction<Record<string | number, boolean>>>;
 }
 
-const ThumbsUpButton: React.FC<ThumbsUpButtonProps> = ({ placeId }) => {
-  const storageKey = `liked-${placeId}`;
-  const [liked, setLiked] = useState<boolean>(false);
-
-  useEffect(() => {
-    const savedLiked = localStorage.getItem(storageKey);
-    if (savedLiked === "true") {
-      setLiked(true);
-    }
-  }, [storageKey]);
+const ThumbsUpButton: React.FC<ThumbsUpButtonProps> = ({ placeId, likedPlaces, setLikedPlaces }) => {
+  const liked = likedPlaces[placeId] || false;
 
   const handleLike = (event: React.MouseEvent<HTMLButtonElement>) => {
     if (!liked) {
@@ -28,8 +21,7 @@ const ThumbsUpButton: React.FC<ThumbsUpButtonProps> = ({ placeId }) => {
           y: (rect.top + rect.height / 2) / window.innerHeight,
         },
       });
-      setLiked(true);
-      localStorage.setItem(storageKey, "true");
+      setLikedPlaces((prev) => ({ ...prev, [placeId]: true }));
     }
   };
 
@@ -41,7 +33,7 @@ const ThumbsUpButton: React.FC<ThumbsUpButtonProps> = ({ placeId }) => {
       className={`flex items-center justify-center p-3 rounded-full border border-gray-400 shadow-md ${
         liked ? "bg-gray-300 cursor-not-allowed" : "bg-white hover:bg-gray-100"
       }`}
-      disabled={liked} // Disable button after clicking
+      disabled={liked}
     >
       <ThumbsUp
         size={24}
