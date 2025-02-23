@@ -28,6 +28,9 @@ export default function Swipe() {
     Record<string | number, boolean>
   >({});
   const [showFilter, adjustShowFilter] = useState(false);
+  const [likedPlaces, setLikedPlaces] = useState<
+    Record<string | number, boolean>
+  >({});
 
   useEffect(() => {
     if (navigator.geolocation) {
@@ -73,21 +76,18 @@ export default function Swipe() {
     setLikedPlaces({}); // Reset likes when new places are displayed
   }, []);
 
-  // 🔹 Add event listener for keyboard presses
   useEffect(() => {
-    if(!showFilter){
-      const handleKeyPress = (event: KeyboardEvent) => {
-        if (event.key === " " || event.key === "Enter") {
-          // Spacebar or Enter key
-          event.preventDefault(); // Prevent default scrolling behavior
-          loadMorePlaces();
-        }
-      };
-  
-      document.addEventListener("keydown", handleKeyPress);
-      return () => document.removeEventListener("keydown", handleKeyPress);
-    }
-  }, [loadMorePlaces, showFilter]);
+    const handleKeyPress = (event: KeyboardEvent) => {
+      if (event.key === " " || event.key === "Enter") {
+        // Spacebar or Enter key
+        event.preventDefault(); // Prevent default scrolling behavior
+        loadMorePlaces();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyPress);
+    return () => document.removeEventListener("keydown", handleKeyPress);
+  }, [loadMorePlaces]);
 
   return (
     <div className="relative overflow-hidden">
@@ -101,12 +101,19 @@ export default function Swipe() {
                     <h1 className="text-black">Filters</h1>
                     <Textarea placeholder="What local businesses do you want to see?" />
                     <div className="mt-5 h-auto">
-                      <h4 className="flex items-center justify-center">radius(km)</h4>
+                      <h4 className="flex items-center justify-center">
+                        radius(km)
+                      </h4>
                       <div className="flex">
                         <h4 className="flex justify-start w-full">1km</h4>
                         <h4 className="flex justify-end w-full">20km</h4>
                       </div>
-                      <Slider defaultValue={[100]} max={20000} step={10} className={"h-10"} />
+                      <Slider
+                        defaultValue={[100]}
+                        max={20000}
+                        step={10}
+                        className={"h-10"}
+                      />
                     </div>
                     <button
                       onClick={() => adjustShowFilter(false)}
