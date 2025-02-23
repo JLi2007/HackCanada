@@ -5,6 +5,7 @@ import { FilterIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
+import { getSession } from "next-auth/react";
 
 interface Location {
   latitude: number;
@@ -28,6 +29,30 @@ export default function Swipe() {
   const [showFilter, adjustShowFilter] = useState(false);
   const [query, setQuery] = useState("");
   const isExitClicked = useRef(false);
+  const [userWishlist, setUserWishlist] = useState<Place[]>([]);
+
+  const fetchUserWishlist = async () => {
+    try {
+      const session = await getSession();
+      if (!session?.user?.email) {
+        console.log("No user session found");
+        return [];
+      }
+
+      // Fetch the user's wishlist from Firebase
+      const response = await fetch(`/api/likes/wishlist`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch wishlist');
+      }
+      
+      const data = await response.json();
+      setUserWishlist(data.wishlist || []);
+      return data.wishlist;
+    } catch (error) {
+      console.error("Error fetching wishlist:", error);
+      return [];
+    }
+  };
 
   const fetchPlaces = async () => {
     if (navigator.geolocation) {
@@ -39,26 +64,41 @@ export default function Swipe() {
           };
           setUserLocation(location);
 
-          // Fetch recommendations from the API based on liked places and user location
           try {
-            const response = await fetch("/api/recommendations", {
+            // First fetch the user's wishlist
+            const wishlistResponse = await fetch('/api/likes/wishlist');
+            if (!wishlistResponse.ok) {
+              throw new Error('Failed to fetch wishlist');
+            }
+            const wishlistData = await wishlistResponse.json();
+            const userWishlist = wishlistData.wishlist || [];
+
+            // Then fetch recommendations using the wishlist
+            const recommendationsResponse = await fetch("/api/recommendations", {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
               },
-              body: JSON.stringify({ likedPlaces: Object.keys(likedPlaces), location }),
+              body: JSON.stringify({ 
+                likedPlaces: userWishlist,
+                location 
+              }),
             });
 
-            const data = await response.json();
-
-            if (response.ok) {
-              setPlaces(data.recommendations);
-              setLikedPlaces({});
-            } else {
-              console.error("Error in fetching recommendations:", data.error);
+            if (!recommendationsResponse.ok) {
+              throw new Error('Failed to fetch recommendations');
             }
+
+            const data = await recommendationsResponse.json();
+            if (Array.isArray(data.recommendations)) {
+              setPlaces(data.recommendations);
+            } else {
+              console.log("Message from recommendations:", data.recommendations);
+              setPlaces([]); // Set empty array if no recommendations
+            }
+            setLikedPlaces({});
           } catch (error) {
-            console.error("Failed to fetch recommendations", error);
+            console.error("Error:", error);
           }
         },
         (error) => console.error("Error getting location", error),
