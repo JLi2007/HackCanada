@@ -1,6 +1,6 @@
 import Nav from "@/app/components/Nav";
 import { Bold } from "lucide-react";
-
+import Link from "next/link";
 export default function Home() {
   return (
     <div className="relative">
@@ -16,9 +16,13 @@ export default function Home() {
           discovering local <em>Canadian</em> businesses<br />has never been easier.
         </span>
         <div className="flex flex-row justify-start h-[100%] w-[75%]">
-          <div className="text-white w-[30%] text-center p-2 rounded-3xl bg-gradient-to-r from-red-500 to-red-800 bg-[length:400%_400%] animate-gradient-x">
-            <strong>HackCanada 2025</strong>
-          </div>
+       
+  <div className="cursor-pointer text-white w-[30%] text-center p-2 rounded-3xl bg-gradient-to-r from-red-500 to-red-800 bg-[length:400%_400%] animate-gradient-x">
+  <Link href="/swipe">
+    <strong>Let's go</strong>
+    </Link>
+  </div>
+
         </div>
       </div>
 
