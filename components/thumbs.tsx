@@ -75,7 +75,7 @@ const ThumbsUpButton: React.FC<ThumbsProps> = ({
           isLiked ? "text-blue-500 fill-blue-500/50" : "text-gray-500"
         }`}
       />
-      <span>{totalLikes}</span>
+      <span className="text-gray-400">{totalLikes}</span>
     </motion.button>
   );
 };
