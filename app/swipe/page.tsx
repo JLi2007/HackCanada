@@ -72,7 +72,7 @@ export default function Swipe() {
             if (userWishlist.length === 0) {
               // Wishlist is empty: fetch places from /api/places endpoint
               const placesResponse = await fetch(
-                `/api/places?location=${location.latitude},${location.longitude}&radius=1000&type=restaurant`
+                `/api/places?location=${location.latitude},${location.longitude}`
               );
               const data = await placesResponse.json();
   
@@ -90,7 +90,7 @@ export default function Swipe() {
               // For now, you might simply log the wishlist or fallback to /api/places.
               console.log("Wishlist exists, but currently bypassing recommendations.");
               const placesResponse = await fetch(
-                `/api/places?location=${location.latitude},${location.longitude}&radius=1000&type=restaurant`
+                `/api/places?location=${location.latitude},${location.longitude}`
               );
               const data = await placesResponse.json();
   
@@ -143,19 +143,18 @@ export default function Swipe() {
     setLikedPlaces({}); // Reset likes when new places are displayed
   }, []);
 
-  useEffect(() => {
-    if (!showFilter) {
-      const handleKeyPress = (event: KeyboardEvent) => {
-        if (event.key === " " || event.key === "Enter") {
-          event.preventDefault();
-          loadMorePlaces();
-        }
-      };
-
-      document.addEventListener("keydown", handleKeyPress);
-      return () => document.removeEventListener("keydown", handleKeyPress);
+useEffect(() => {
+  const handleKeyPress = (event: KeyboardEvent) => {
+    if (event.key === " " || event.key === "Enter") {
+      event.preventDefault();
+      // Each time space/enter is pressed, re-fetch recommendations.
+      fetchPlaces();
     }
-  }, [loadMorePlaces, showFilter]);
+  };
+  document.addEventListener("keydown", handleKeyPress);
+  return () => document.removeEventListener("keydown", handleKeyPress);
+}, [fetchPlaces]);
+
 
   return (
     <div className="relative overflow-hidden">
