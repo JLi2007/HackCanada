@@ -24,37 +24,41 @@ export default function Swipe() {
   const [userLocation, setUserLocation] = useState<Location | null>(null);
   const [places, setPlaces] = useState<Place[] | null>(null);
   const [displayCount, setDisplayCount] = useState(3);
-  const [likedPlaces, setLikedPlaces] = useState<
-    Record<string | number, boolean>
-  >({});
+  const [likedPlaces, setLikedPlaces] = useState<Record<string | number, boolean>>({});
   const [showFilter, adjustShowFilter] = useState(false);
   const [query, setQuery] = useState("");
   const isExitClicked = useRef(false);
 
-  const fetchPlaces = () =>{
+  const fetchPlaces = async () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         async (position) => {
-          const locationString = `${position.coords.latitude},${position.coords.longitude}`;
-          setUserLocation({
+          const location = {
             latitude: position.coords.latitude,
             longitude: position.coords.longitude,
-          });
+          };
+          setUserLocation(location);
 
+          // Fetch recommendations from the API based on liked places and user location
           try {
-            const response = await fetch(
-              `api/places?location=${locationString}`
-            );
-            const data: Place[] = await response.json();
+            const response = await fetch("/api/recommendations", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ likedPlaces: Object.keys(likedPlaces), location }),
+            });
+
+            const data = await response.json();
 
             if (response.ok) {
-              setPlaces(data);
+              setPlaces(data.recommendations);
               setLikedPlaces({});
             } else {
-              console.error("Error in fetching response");
+              console.error("Error in fetching recommendations:", data.error);
             }
           } catch (error) {
-            console.error("Failed to fetch", error);
+            console.error("Failed to fetch recommendations", error);
           }
         },
         (error) => console.error("Error getting location", error),
@@ -63,26 +67,25 @@ export default function Swipe() {
     } else {
       console.error("Geolocation is not supported by this browser.");
     }
-  }
+  };
 
   const handleExit = () => {
     isExitClicked.current = true;
-    adjustShowFilter(prev => !prev);
+    adjustShowFilter((prev) => !prev);
   };
 
   useEffect(() => {
     fetchPlaces();
   }, []);
 
-  useEffect(()=>{
+  useEffect(() => {
     if (isExitClicked.current) {
       isExitClicked.current = false;
       return;
-    } 
+    }
     fetchPlaces();
-  }, [adjustShowFilter])
+  }, [adjustShowFilter]);
 
-  console.log(userLocation);
   const togglePanel = () => {
     adjustShowFilter((prev) => !prev);
   };
@@ -122,19 +125,12 @@ export default function Swipe() {
                       onChange={(e) => setQuery(e.target.value)}
                     />
                     <div className="mt-5 h-auto">
-                      <h4 className="flex items-center justify-center">
-                        radius(km)
-                      </h4>
+                      <h4 className="flex items-center justify-center">radius(km)</h4>
                       <div className="flex">
                         <h4 className="flex justify-start w-full">1km</h4>
                         <h4 className="flex justify-end w-full">20km</h4>
                       </div>
-                      <Slider
-                        defaultValue={[100]}
-                        max={20000}
-                        step={10}
-                        className={"h-10"}
-                      />
+                      <Slider defaultValue={[100]} max={20000} step={10} className={"h-10"} />
                     </div>
                     <button
                       onClick={() => adjustShowFilter(false)}
@@ -167,17 +163,15 @@ export default function Swipe() {
                 </button>
               </div>
               <ul className="flex justify-between w-full">
-                {places
-                  .slice(displayCount - 3, displayCount)
-                  .map((place: Place) => (
-                    <SwipeCard
-                      key={place.id}
-                      place={place}
-                      likedPlaces={likedPlaces}
-                      setLikedPlaces={setLikedPlaces}
-                    />
-                  ))}
-              </ul>
+  {Array.isArray(places) && places.slice(displayCount - 3, displayCount).map((place: Place) => (
+    <SwipeCard
+      key={place.id}
+      place={place}
+      likedPlaces={likedPlaces}
+      setLikedPlaces={setLikedPlaces}
+    />
+  ))}
+</ul>
             </div>
           )}
         </div>

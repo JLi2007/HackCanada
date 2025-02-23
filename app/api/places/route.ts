@@ -83,7 +83,6 @@ async function getPlaceDetails(placeId: string, apiKey: string) {
 
   const response = await fetch(detailsUrl);
   const detailsData = await response.json();
-  console.log("Place Details API Response:", detailsData);
 
   return (
     detailsData.result?.editorial_summary?.overview ||
