@@ -28,9 +28,6 @@ export default function Swipe() {
     Record<string | number, boolean>
   >({});
   const [showFilter, adjustShowFilter] = useState(false);
-  const [likedPlaces, setLikedPlaces] = useState<
-    Record<string | number, boolean>
-  >({});
 
   useEffect(() => {
     if (navigator.geolocation) {
@@ -77,17 +74,18 @@ export default function Swipe() {
   }, []);
 
   useEffect(() => {
-    const handleKeyPress = (event: KeyboardEvent) => {
-      if (event.key === " " || event.key === "Enter") {
-        // Spacebar or Enter key
-        event.preventDefault(); // Prevent default scrolling behavior
-        loadMorePlaces();
-      }
-    };
+    if (!showFilter) {
+      const handleKeyPress = (event: KeyboardEvent) => {
+        if (event.key === " " || event.key === "Enter") {
+          event.preventDefault();
+          loadMorePlaces();
+        }
+      };
 
-    document.addEventListener("keydown", handleKeyPress);
-    return () => document.removeEventListener("keydown", handleKeyPress);
-  }, [loadMorePlaces]);
+      document.addEventListener("keydown", handleKeyPress);
+      return () => document.removeEventListener("keydown", handleKeyPress);
+    }
+  }, [loadMorePlaces, showFilter]);
 
   return (
     <div className="relative overflow-hidden">
