@@ -53,7 +53,6 @@ export default function Swipe() {
       return [];
     }
   };
-
   const fetchPlaces = async () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -63,42 +62,49 @@ export default function Swipe() {
             longitude: position.coords.longitude,
           };
           setUserLocation(location);
-
+  
           try {
-            // First fetch the user's wishlist
-            const wishlistResponse = await fetch('/api/likes/wishlist');
-            if (!wishlistResponse.ok) {
-              throw new Error('Failed to fetch wishlist');
-            }
+            // Fetch the user's wishlist
+            const wishlistResponse = await fetch("/api/likes/wishlist");
             const wishlistData = await wishlistResponse.json();
             const userWishlist = wishlistData.wishlist || [];
-
-            // Then fetch recommendations using the wishlist
-            const recommendationsResponse = await fetch("/api/recommendations", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({ 
-                likedPlaces: userWishlist,
-                location 
-              }),
-            });
-
-            if (!recommendationsResponse.ok) {
-              throw new Error('Failed to fetch recommendations');
-            }
-
-            const data = await recommendationsResponse.json();
-            if (Array.isArray(data.recommendations)) {
-              setPlaces(data.recommendations);
+  
+            if (userWishlist.length === 0) {
+              // Wishlist is empty: fetch places from /api/places endpoint
+              const placesResponse = await fetch(
+                `/api/places?location=${location.latitude},${location.longitude}&radius=1000&type=restaurant`
+              );
+              const data = await placesResponse.json();
+  
+              if (Array.isArray(data)) {
+                // Randomize and pick 20 places
+                const shuffled = data.sort(() => 0.5 - Math.random());
+                const randomPlaces = shuffled.slice(0, 20);
+                setPlaces(randomPlaces);
+              } else {
+                console.error("Unexpected response from /api/places:", data);
+                setPlaces([]);
+              }
             } else {
-              console.log("Message from recommendations:", data.recommendations);
-              setPlaces([]); // Set empty array if no recommendations
+              // If wishlist exists, use recommendations logic (or bypass for now)
+              // For now, you might simply log the wishlist or fallback to /api/places.
+              console.log("Wishlist exists, but currently bypassing recommendations.");
+              const placesResponse = await fetch(
+                `/api/places?location=${location.latitude},${location.longitude}&radius=1000&type=restaurant`
+              );
+              const data = await placesResponse.json();
+  
+              if (Array.isArray(data)) {
+                const shuffled = data.sort(() => 0.5 - Math.random());
+                const randomPlaces = shuffled.slice(0, 20);
+                setPlaces(randomPlaces);
+              } else {
+                setPlaces([]);
+              }
             }
             setLikedPlaces({});
           } catch (error) {
-            console.error("Error:", error);
+            console.error("Error fetching places:", error);
           }
         },
         (error) => console.error("Error getting location", error),
@@ -108,6 +114,8 @@ export default function Swipe() {
       console.error("Geolocation is not supported by this browser.");
     }
   };
+  
+  
 
   const handleExit = () => {
     isExitClicked.current = true;
