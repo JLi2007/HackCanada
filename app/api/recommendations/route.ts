@@ -26,6 +26,9 @@ export async function POST(req: NextRequest) {
       throw new Error("API keys are not set");
     }
 
+    // Add console logs to debug wishlist data
+    console.log("Received likedPlaces:", likedPlaces);
+
     // If likedPlaces is empty or undefined, return early with a message
     if (!likedPlaces || likedPlaces.length === 0) {
       return NextResponse.json({
@@ -37,26 +40,32 @@ export async function POST(req: NextRequest) {
     const locationsRef = db.collection("locations");
     const locationDetails = await Promise.all(
       likedPlaces.map(async (placeId: string) => {
+        console.log("Fetching details for placeId:", placeId);
         const locationSnapshot = await locationsRef
           .where("id", "==", placeId)
           .limit(1)
           .get();
 
         if (!locationSnapshot.empty) {
-          return locationSnapshot.docs[0].data();
+          const data = locationSnapshot.docs[0].data();
+          console.log("Found location data:", data);
+          return data;
         }
+        console.log("No location found for placeId:", placeId);
         return null;
       })
     );
 
     // Filter out any null values
     const validLocations = locationDetails.filter(loc => loc !== null);
+    console.log("Valid locations:", validLocations);
 
     // Format locations for the prompt
     const likedPlacesInfo = validLocations.map(place => ({
       name: place.name || "Unknown Place",
       type: place.type || place.category || "Unknown Type"
     }));
+    console.log("Formatted likedPlacesInfo:", likedPlacesInfo);
 
     const genAI = new GoogleGenerativeAI(geminiApiKey);
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
