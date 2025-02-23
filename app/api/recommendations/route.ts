@@ -16,13 +16,13 @@ function weightedRandom(categories: Record<string, number>): string {
 }
 
 // Function to get a random element from an array
-function getRandomElement<T>(array: T[]): T {
-  return array[Math.floor(Math.random() * array.length)];
-}
+// function getRandomElement<T>(array: T[]): T {
+//   return array[Math.floor(Math.random() * array.length)];
+// }
 
 export async function POST(req: NextRequest) {
   try {
-    const { likedPlaces, dislikedPlaces, location } = await req.json();
+    const { likedPlaces, location } = await req.json();
 
     const placesApiKey = process.env.GOOGLE_PLACES_API_KEY;
     const geminiApiKey = process.env.GEMINI_API_KEY;
@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
     ];
 
     const categoryCounts: Record<string, number> = {};
-    for (const [business, category] of Object.entries(categoryMap)) {
+    for (const [category] of Object.entries(categoryMap)) { //[business,category] but removed business
       if (!excludedCategories.some(excluded => category.toLowerCase().includes(excluded.toLowerCase()))) {
         categoryCounts[category] = (categoryCounts[category] || 0) + 1;
       }
