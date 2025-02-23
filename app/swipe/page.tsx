@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import SwipeCard from "@/components/swipeCard";
 import { FilterIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -17,7 +17,7 @@ interface Place {
   address?: string;
   description?: string;
   photo?: string;
-  type?: string;
+  query?: string;
 }
 
 export default function Swipe() {
@@ -28,8 +28,10 @@ export default function Swipe() {
     Record<string | number, boolean>
   >({});
   const [showFilter, adjustShowFilter] = useState(false);
+  const [query, setQuery] = useState("");
+  const isExitClicked = useRef(false);
 
-  useEffect(() => {
+  const fetchPlaces = () =>{
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         async (position) => {
@@ -61,7 +63,24 @@ export default function Swipe() {
     } else {
       console.error("Geolocation is not supported by this browser.");
     }
+  }
+
+  const handleExit = () => {
+    isExitClicked.current = true;
+    adjustShowFilter(prev => !prev);
+  };
+
+  useEffect(() => {
+    fetchPlaces();
   }, []);
+
+  useEffect(()=>{
+    if (isExitClicked.current) {
+      isExitClicked.current = false;
+      return;
+    } 
+    fetchPlaces();
+  }, [adjustShowFilter])
 
   console.log(userLocation);
   const togglePanel = () => {
@@ -97,7 +116,11 @@ export default function Swipe() {
                 <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
                   <div className="bg-stone-400/80 shadow-lg p-6 rounded-lg w-100 h-auto">
                     <h1 className="text-black">Filters</h1>
-                    <Textarea placeholder="What local businesses do you want to see?" />
+                    <Textarea
+                      placeholder="What local businesses do you want to see?"
+                      value={query}
+                      onChange={(e) => setQuery(e.target.value)}
+                    />
                     <div className="mt-5 h-auto">
                       <h4 className="flex items-center justify-center">
                         radius(km)
@@ -118,6 +141,12 @@ export default function Swipe() {
                       className="mt-4 px-4 py-2 bg-green-600 text-white rounded w-full"
                     >
                       Submit
+                    </button>
+                    <button
+                      onClick={() => handleExit()}
+                      className="mt-4 px-4 py-2 bg-red-600 text-white rounded w-full"
+                    >
+                      Exit
                     </button>
                   </div>
                 </div>
