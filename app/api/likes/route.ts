@@ -1,4 +1,3 @@
-// app/api/likes/route.ts
 import { NextResponse } from "next/server";
 import { getFirestore } from "firebase-admin/firestore";
 import { getServerSession } from "next-auth";
@@ -12,8 +11,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { placeId, action } = await request.json();
-    if (!placeId || !action) {
+    // Expecting a full "place" object (with metadata) and an "action" string.
+    const { place, action } = await request.json();
+    if (!place?.id || !action) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }
@@ -23,42 +23,47 @@ export async function POST(request: Request) {
     const userRef = db.collection("users").doc(session.user.email);
     const locationsRef = db.collection("locations");
 
-    // First check if location exists with this ID
+    // Look up an existing document for this place in the locations collection.
     const locationSnapshot = await locationsRef
-      .where("id", "==", placeId)
+      .where("id", "==", place.id)
       .limit(1)
       .get();
     const locationRef = locationSnapshot.empty
-      ? locationsRef.doc() // Create new doc with auto-ID if location doesn't exist
+      ? locationsRef.doc() // Create new doc if none exists
       : locationSnapshot.docs[0].ref;
 
     await db.runTransaction(async (transaction) => {
       const userDoc = await transaction.get(userRef);
       const locationDoc = await transaction.get(locationRef);
+      // Wishlist is now an array of objects.
       const wishlist = userDoc.exists ? userDoc.data()?.wishlist || [] : [];
 
-      if (action === "like" && !wishlist.includes(placeId)) {
+      // Check if this place is already liked by looking for an object with a matching id.
+      const alreadyLiked = wishlist.some((p: any) => p.id === place.id);
+
+      if (action === "like" && !alreadyLiked) {
         transaction.set(
           userRef,
-          { wishlist: [...wishlist, placeId] },
+          { wishlist: [...wishlist, place] },
           { merge: true }
         );
 
         transaction.set(
           locationRef,
           {
-            id: placeId, // Store the original ID
+            id: place.id,
+            name: place.name,
             total_likes:
-              (locationDoc.exists ? locationDoc.data()?.total_likes || 0 : 0) +
-              1,
+              (locationDoc.exists ? locationDoc.data()?.total_likes || 0 : 0) + 1,
+            // You can store additional metadata if needed.
           },
           { merge: true }
         );
-      } else if (action === "unlike" && wishlist.includes(placeId)) {
+      } else if (action === "unlike" && alreadyLiked) {
         transaction.set(
           userRef,
           {
-            wishlist: wishlist.filter((id: string | number) => id !== placeId),
+            wishlist: wishlist.filter((p: any) => p.id !== place.id),
           },
           { merge: true }
         );
@@ -76,7 +81,6 @@ export async function POST(request: Request) {
       }
     });
 
-    // Get updated counts
     const locationDoc = await locationRef.get();
     return NextResponse.json({
       success: true,
@@ -84,10 +88,7 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     console.error("Error processing like/unlike:", error);
-    return NextResponse.json(
-      { error: "Failed to process request" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to process request" }, { status: 500 });
   }
 }
 
@@ -98,13 +99,10 @@ export async function GET(request: Request) {
     const session = await getServerSession();
 
     if (!placeId) {
-      return NextResponse.json(
-        { error: "Place ID is required" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Place ID is required" }, { status: 400 });
     }
 
-    // Query by ID field instead of document ID
+    // Query by the "id" field (not document ID) in locations.
     const locationSnapshot = await db
       .collection("locations")
       .where("id", "==", placeId)
@@ -113,12 +111,9 @@ export async function GET(request: Request) {
 
     let isLiked = false;
     if (session?.user?.email) {
-      const userDoc = await db
-        .collection("users")
-        .doc(session.user.email)
-        .get();
+      const userDoc = await db.collection("users").doc(session.user.email).get();
       const wishlist = userDoc.exists ? userDoc.data()?.wishlist || [] : [];
-      isLiked = wishlist.includes(placeId);
+      isLiked = wishlist.some((p: any) => p.id === placeId);
     }
 
     const locationDoc = locationSnapshot.empty
@@ -130,9 +125,6 @@ export async function GET(request: Request) {
     });
   } catch (error) {
     console.error("Error fetching likes:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch likes" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to fetch likes" }, { status: 500 });
   }
 }

@@ -1,3 +1,5 @@
+import { initializeApp } from "firebase-admin/app";
+initializeApp();
 import { NextResponse } from "next/server";
 import { getFirestore } from "firebase-admin/firestore";
 import { getServerSession } from "next-auth";
